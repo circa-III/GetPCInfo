@@ -1,16 +1,22 @@
-Download the GetPCInfo.zip file, right click and Extract All, and choose the C:\ drive. The shortcuts (.lnk files) can go anywhere like the desktop or drag to your taskbar. Double click the shortcuts to run. The normal "GetPCInfo" script will search by computer name (configuration item / hostname) and the "GetPCInfo (Asset)" will search by asset tag number (AD description).
+Download the GetPCInfo.zip file, right click and Extract All, and choose the C:\ drive. The shortcuts (.lnk file) can go anywhere like the desktop or drag to your taskbar. Double click the shortcut to run.
 
 **If the script gives a warning when launching it, right click the .ps1 file, go to Properties, check the Unblock option at the bottom, click apply.**
 
 Wait for it to finish pull the info. If there is red error text saying "Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed" you can ignore it if it still pulls info. It checks 4 different registry keys for info and some computers won't have them all.
 
-It should list the name, serial, current logged in user, asset, IP address, current logged in user, Printers installed, software installed (minus a bunch of pre-installed software and drivers), and the AD location and groups.
+It should list the name, serial, current logged in user, asset, IP address, current logged in user, Printers installed, software installed (minus a bunch of pre-installed software and drivers), Monitors plugged in, OneDrive sync status, and the AD location and groups.
 
 If the files are not in the C:\ folder the shortcuts won't work until you change the path of the shortcut to point to where you put the files.\
 
 If you have any questions, reach out to Brad Linder (blinder@ecommunity)
 
 =======CHANGELOG========
+-===[ UPDATE 26.03 ]===-
+- Cleaned up code, added sections with color
+- Added OneDrive sync status
+- Added monitor section, shows all plugged in monitors
+- Re-wrote AD section
+- Gives warning when name isn't pinged or found
 -===[ UPDATE 26.02 ]===-
 - Removed McAfee from the exceptions list so we can see what still has McAfee
 - Added ANCILE to list of exceptions now that it's pushed to all machines
