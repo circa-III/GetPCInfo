@@ -1,8 +1,16 @@
+$Version = "GetPCInfo | Version 26.02"
+# Script made by Brad Linder - blinder@ecommunity.com
 $continueSearching = $true
 
 while ($continueSearching) {
+
+    
+Write-Host "========================="
+    Write-Host $Version -ForegroundColor Cyan
+    Write-Host "========================="
+
     # Prompt the user to enter computer descriptions using a text box popup
-    $Descriptions = Read-Host -Prompt "Enter computer descriptions (separated by commas)"
+    $Descriptions = Read-Host -Prompt "Enter computer asset tags (separated by commas)"
 
     # Split the input into an array of descriptions
     $Descriptions = $Descriptions -split ','
@@ -47,7 +55,6 @@ while ($continueSearching) {
                                         $_.DisplayName -notlike '*Acrobat Reader*' -and
                                         $_.DisplayName -notlike '*Refresh Manager*' -and
                                         $_.DisplayName -notlike '*Genuine Service*' -and
-                                        $_.Publisher -notlike 'McAfee*' -and
                                         $_.DisplayName -notlike '*Webex*' -and
                                         $_.DisplayName -notlike '*Update Helper*' -and
                                         $_.Publisher -notlike 'PrinterLogic*' -and
@@ -64,6 +71,7 @@ while ($continueSearching) {
                                         $_.DisplayName -notlike 'Update for*' -and
 					$_.DisplayName -notlike '*Support Button*' -and
 					$_.DisplayName -notlike 'PaperCut*' -and
+					$_.Publisher -notlike 'ANCILE*' -and
                                         $_.Publisher -notlike '*Citrix*'
                                     )
                                 } |

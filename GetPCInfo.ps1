@@ -1,6 +1,14 @@
+$Version = "GetPCInfo | Version 26.02"
+# Script made by Brad Linder - blinder@ecommunity.com
 $continueSearching = $true
 
 while ($continueSearching) {
+
+    
+Write-Host "========================="
+    Write-Host $Version -ForegroundColor Cyan
+    Write-Host "========================="
+
     # Prompt the user to enter computer names using a text box popup
     $Computers = Read-Host -Prompt "Enter computer names (separated by commas)"
 
@@ -43,7 +51,6 @@ while ($continueSearching) {
                                     $_.DisplayName -notlike '*Acrobat Reader*' -and
                                     $_.DisplayName -notlike '*Refresh Manager*' -and
                                     $_.DisplayName -notlike '*Genuine Service*' -and
-                                    $_.Publisher -notlike 'McAfee*' -and
                                     $_.DisplayName -notlike '*Webex*' -and
                                     $_.DisplayName -notlike '*Update Helper*' -and
                                     $_.Publisher -notlike 'PrinterLogic*' -and
@@ -58,8 +65,9 @@ while ($continueSearching) {
                                     $_.Publisher -notlike 'Conexant*' -and
                                     $_.Publisher -notlike 'HP*' -and
                                     $_.DisplayName -notlike 'Update for*' -and
-				$_.DisplayName -notlike '*Support Button*' -and
+					$_.DisplayName -notlike '*Support Button*' -and
 					$_.DisplayName -notlike 'PaperCut*' -and
+					$_.Publisher -notlike 'ANCILE*' -and
                                     $_.Publisher -notlike '*Citrix*'
                                 )
                             } |

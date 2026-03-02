@@ -11,6 +11,13 @@ If the files are not in the C:\ folder the shortcuts won't work until you change
 If you have any questions, reach out to Brad Linder (blinder@ecommunity)
 
 =======CHANGELOG========
+-===[ UPDATE 26.02 ]===-
+- Removed McAfee from the exceptions list so we can see what still has McAfee
+- Added ANCILE to list of exceptions now that it's pushed to all machines
+- Changed versioning scheme, now is the year.month to simplify
+- Added version number at script run
+- Removed version from file name so future versions can more easily be replaced
+
 -===[ UPDATE Apr 2025 ]===-
 - Added Beyond Trust, OneDrive printer, PaperCut to exceptions
 - Added a new file for searching by asset tag (AD description)
