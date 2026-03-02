@@ -58,6 +58,8 @@ while ($continueSearching) {
                                     $_.Publisher -notlike 'Conexant*' -and
                                     $_.Publisher -notlike 'HP*' -and
                                     $_.DisplayName -notlike 'Update for*' -and
+				$_.DisplayName -notlike '*Support Button*' -and
+					$_.DisplayName -notlike 'PaperCut*' -and
                                     $_.Publisher -notlike '*Citrix*'
                                 )
                             } |
@@ -74,7 +76,7 @@ while ($continueSearching) {
                 # Printers
                 Write-Host "-===[ Installed Printers ]===-"
                 Get-CimInstance -ClassName Win32_Printer -ComputerName $comp | 
-                Where-Object { $_.Name -notlike 'WebEx*' -and $_.Name -notlike 'Send*' -and $_.Name -notlike 'Microsoft*' -and $_.Name -notlike 'Fax' } | 
+                Where-Object { $_.Name -notlike 'WebEx*' -and $_.Name -notlike 'OneNote*' -and $_.Name -notlike 'Send*' -and $_.Name -notlike 'Microsoft*' -and $_.Name -notlike 'Fax' } | 
                 Select-Object Name, DriverName, Portname | 
                 Format-Table -AutoSize
 
