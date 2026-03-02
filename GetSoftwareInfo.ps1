@@ -1,13 +1,94 @@
-powershell -NoExit {
-$Computers = Get-Content "PC_LIST.TXT" 
-ForEach ($comp in $computers)
-{
-Get-CimInstance -ClassName Win32_ComputerSystem -ComputerName $comp | Select -Property Name,Model,Username | ft -autosize -wrap 
-Get-WmiObject -Class Win32_OperatingSystem -computername $comp | Select Description | ft -auto
-Get-CimInstance Win32_BIOS -ComputerName $comp | Select -Property SerialNumber | ft -auto
-Get-WmiObject -Class Win32_NetworkAdapterConfiguration -Filter 'IpEnabled=True' -ComputerName $comp | Select -Property IPAddress | ft -auto
-Get-CimInstance -ClassName Win32_Printer -ComputerName $comp | Select-Object Name,DriverName,Portname | Where-Object -FilterScript { ($_.Name -notlike 'WebEx*' -and $_.Name -notlike 'Send*' -and $_.Name -notlike 'Microsoft*' -and $_.Name -notlike 'Fax' ) } | ft -autosize -wrap 
-Get-CimInstance -ClassName Win32_Product -ComputerName $comp | Select -Property Name,Vendor | Where-Object -FilterScript { ($_.Vendor -notlike 'Microsoft*' -and $_.Name -notlike 'Microsoft*' -and $_.Vendor -notlike 'Citrix*' -and $_.Vendor -notlike 'PrinterLogic' -and $_.Vendor -notlike 'McAfee*' -and $_.Vendor -notlike 'Intel*' -and $_.Vendor -notlike 'Hewlett-Packard*' -and $_.Vendor -notlike 'Sun*' -and $_.Vendor -notlike 'Cisco*' -and $_.Vendor -notlike 'Husdawg*' -and $_.Vendor -notlike 'Oracle*' -and $_.Vendor -notlike 'HP*' -and $_.Vendor -notlike 'HP Inc.*' -and $_.Name -notlike 'Google Update Helper*' -and $_.Name -notlike 'Cortex*' -and $_.Name -notlike 'BloxOne*' -and $_.Name -notlike 'Adobe Acrobat Reader DC*' -and $_.Name -notlike 'Adobe Refresh Manager*' -and $_.Name -notlike 'Google Toolbar*' -and $_.Name -notlike 'Adobe Reader X*' -and $_.Name -notlike 'McAfee Drive Encryption' -and $_.Name -notlike 'Adobe Flash Player 21 ActiveX' -and $_.Name -notlike 'Adobe Refresh Manager' -and $_.Name -notlike 'Adobe Acrobat Reader DC' -and $_.Name -notlike 'LWS*' -and $_.Name -notlike 'CameraHelperMsi*' -and $_.Name -notlike 'Alcor*' -and $_.Name -notlike 'Amtel*'-and $_.Name -notlike 'Visual C*') } | ft -autosize -wrap  
-Get-ADComputer -Identity $Comp -Properties Description | ft -a DistinguishedName,Description
-} 
+$continueSearching = $true
+
+while ($continueSearching) {
+    # Prompt the user to enter computer names using a text box popup
+    $Computers = Read-Host -Prompt "Enter computer names (separated by commas)"
+
+    # Split the input into an array of computer names
+    $Computers = $Computers -split ','
+
+    ForEach ($comp in $Computers) {
+        # Check if the computer is reachable
+        if (Test-Connection -ComputerName $comp -Count 1 -Quiet) {
+            try {
+                Write-Host "Gathering information for $comp..."
+               
+                # System Information
+                Write-Host "-===[ System Info ]===-"
+                Get-CimInstance -ClassName Win32_ComputerSystem -ComputerName $comp | Select-Object -Property Name,Model,Username | Format-Table -AutoSize
+                Get-WmiObject -Class Win32_OperatingSystem -ComputerName $comp | Select-Object -Property Description | Format-Table -AutoSize
+                Get-CimInstance Win32_BIOS -ComputerName $comp | Select-Object -Property SerialNumber | Format-Table -AutoSize
+                Get-WmiObject -Class Win32_NetworkAdapterConfiguration -ComputerName $comp -Filter 'IpEnabled=True' | Select-Object -Property IPAddress, MACAddress | Format-Table -AutoSize
+
+                # Define script block within the loop
+                $scriptBlock = {
+                    $softwareKeys = @(
+                        'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*',
+                        'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*',
+                        'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*',
+                        'HKCU:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
+                    )
+
+                    foreach ($key in $softwareKeys) {
+                        if (Test-Path $key) {
+                            Get-ItemProperty -Path $key |
+                            Where-Object {
+                                $_.DisplayName -and (
+                                    ($_.Publisher -notmatch 'Microsoft*' -or
+                                    $_.DisplayName -match '365' -or
+                                    $_.DisplayName -match 'Teams') -and
+                                    $_.DisplayName -notlike 'BloxOne*' -and
+                                    $_.DisplayName -notlike 'Cortex*' -and
+                                    $_.DisplayName -notlike 'Bomgar Button*' -and
+                                    $_.DisplayName -notlike '*Acrobat Reader*' -and
+                                    $_.DisplayName -notlike '*Refresh Manager*' -and
+                                    $_.DisplayName -notlike '*Genuine Service*' -and
+                                    $_.Publisher -notlike 'McAfee*' -and
+                                    $_.DisplayName -notlike '*Webex*' -and
+                                    $_.DisplayName -notlike '*Update Helper*' -and
+                                    $_.Publisher -notlike 'PrinterLogic*' -and
+                                    $_.DisplayName -notlike '*Windows Driver*' -and
+                                    $_.DisplayName -notlike '*Realtek*' -and
+                                    $_.Publisher -notlike '*Cisco*' -and
+                                    $_.DisplayName -notlike 'Microsoft Edge*' -and
+                                    $_.Publisher -notlike 'Midmark Diagnostics*' -and
+                                    $_.Publisher -notlike 'Intel*' -and
+                                    $_.Publisher -notlike 'Epic*' -and
+                                    $_.DisplayName -notlike '*Vulkan*' -and
+                                    $_.Publisher -notlike 'Conexant*' -and
+                                    $_.Publisher -notlike 'HP*' -and
+                                    $_.DisplayName -notlike 'Update for*' -and
+                                    $_.Publisher -notlike '*Citrix*'
+                                )
+                            } |
+                            Select-Object DisplayName, Publisher
+                        }
+                    }
+                }
+
+                # Execute the script block remotely
+                $softwareList = Invoke-Command -ComputerName $comp -ScriptBlock $scriptBlock | Sort-Object DisplayName -Unique | Format-Table -AutoSize
+                Write-Host "-===[ Installed Software ]===-"
+                $softwareList
+
+                # Printers
+                Write-Host "-===[ Installed Printers ]===-"
+                Get-CimInstance -ClassName Win32_Printer -ComputerName $comp | 
+                Where-Object { $_.Name -notlike 'WebEx*' -and $_.Name -notlike 'Send*' -and $_.Name -notlike 'Microsoft*' -and $_.Name -notlike 'Fax' } | 
+                Select-Object Name, DriverName, Portname | 
+                Format-Table -AutoSize
+
+                # Active Directory Computer Information
+                Write-Host "-==[ Active Directory ]==-"
+                Get-ADComputer -Identity $comp -Properties Description | 
+                Select-Object DistinguishedName, Description | 
+                Format-Table -AutoSize
+
+            } catch {
+                Write-Host "Error accessing $comp - $_"
+            }
+        } else {
+            Write-Host "Computer $comp is offline or unreachable."
+        }
+    }
 }
