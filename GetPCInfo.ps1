@@ -27,7 +27,7 @@ param(
     [string]$TranscriptFolder = 'C:\Computer Reports'
 )
 
-$Version = "GetPCInfo | Version 26.03"
+$Version = "GetPCInfo | Version 26.03.04"
 
 # Detect /t as a standalone token (PowerShell passes unbound tokens in $args)
 $Transcript = $Transcript -or ($args | Where-Object { $_ -ieq '/t' } | ForEach-Object { $true } | Select-Object -First 1)
@@ -410,13 +410,25 @@ function Invoke-GetPCInfo {
                             Write-Host ("Interactive User: {0}" -f $user)
 
                             # 2) HKU:\<SID>\Software\Microsoft\OneDrive\Accounts\Business1
-                            $odKeyPath = "Registry::HKEY_USERS\$sid\Software\Microsoft\OneDrive\Accounts\Business1"
                             $odAccount = Invoke-Command -ComputerName $comp -ScriptBlock {
-                                param($k)
-                                if (Test-Path $k) {
-                                    Get-ItemProperty -Path $k | Select-Object UserEmail, UserFolder, TenantName, DisplayName, LastSignInTime, LastCandidateUpdateTime
-                                }
-                            } -ArgumentList $odKeyPath
+                                param($sid)
+                                try {
+                                    $regPath = "Software\Microsoft\OneDrive\Accounts\Business1"
+                                    $hku = [Microsoft.Win32.Registry]::Users
+                                    $key = $hku.OpenSubKey("$sid\$regPath")
+                                    if ($key) {
+                                        $props = @{
+                                            UserEmail = $key.GetValue("UserEmail")
+                                            UserFolder = $key.GetValue("UserFolder")
+                                            DisplayName = $key.GetValue("DisplayName")
+                                            LastSignInTime = $key.GetValue("LastSignInTime")
+                                            LastCandidateUpdateTime = $key.GetValue("LastCandidateUpdateTime")
+                                        }
+                                        $key.Close()
+                                        [PSCustomObject]$props
+                                    }
+                                } catch {}
+                            } -ArgumentList $sid
 
                             if (-not $odAccount) {
                                 Write-Host "OneDrive for Business: Not configured for this user (no Business1 key)."
@@ -424,13 +436,11 @@ function Invoke-GetPCInfo {
                             else {
                                 $odEmail  = $odAccount.UserEmail
                                 $odFolder = $odAccount.UserFolder
-                                $tenant   = $odAccount.TenantName
 
                                 $odEmailOut = if ([string]::IsNullOrWhiteSpace($odEmail)) { '(unknown)'} else { $odEmail }
-                                $tenantOut  = if ([string]::IsNullOrWhiteSpace($tenant))  { '(unknown)'} else { $tenant }
                                 $folderOut  = if ([string]::IsNullOrWhiteSpace($odFolder)){ '(unknown)'} else { $odFolder }
 
-                                Write-Host ("Signed-in: {0} (Tenant: {1})" -f $odEmailOut, $tenantOut)
+                                Write-Host ("Signed-in: {0}" -f $odEmailOut)
                                 Write-Host ("Local Folder: {0}" -f $folderOut)
 
                                 # 3) Logs: SyncDiagnostics.log (state + recent time)
@@ -553,9 +563,9 @@ if ($Computers -and $Computers.Count -gt 0) {
 else {
     # Interactive mode (prompt once per run; empty input exits)
     while ($true) {
-        Write-Host "========================="
+        Write-Host "============================"
         Write-Host $Version -ForegroundColor Cyan
-        Write-Host "========================="
+        Write-Host "============================"
         Write-Host "Type computer names (comma-separated) and press ENTER."
         Write-Host "Add /t after the PC name to save a transcript text file (i.e. NR-ISPC1 /t)"
         Write-Host ""
