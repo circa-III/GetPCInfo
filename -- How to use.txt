@@ -11,6 +11,10 @@ If the files are not in the C:\ folder the shortcuts won't work until you change
 If you have any questions, reach out to Brad Linder (blinder@ecommunity)
 
 =======CHANGELOG========
+-===[ UPDATE 26.03.04]===-
+- Update script version to 26.03.04
+- Refactor OneDrive registry access, replace the previous remote HKU path invocation with a registry-based lookup using Microsoft.Win32.Registry::Users and a try/catch
+- Remove TenantName handling from output and simplify signed-in message.
 -===[ UPDATE 26.03 ]===-
 - Cleaned up code, added sections with color
 - Added OneDrive sync status
