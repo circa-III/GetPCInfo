@@ -27,7 +27,7 @@ param(
     [string]$TranscriptFolder = 'C:\Computer Reports'
 )
 
-$Version = "GetPCInfo | Version 26.03.04"
+$Version = "GetPCInfo | Version 26.03.05"
 
 # Detect /t as a standalone token (PowerShell passes unbound tokens in $args)
 $Transcript = $Transcript -or ($args | Where-Object { $_ -ieq '/t' } | ForEach-Object { $true } | Select-Object -First 1)
@@ -377,8 +377,12 @@ function Invoke-GetPCInfo {
                             if (-not $user) {
                                 $explorer = Get-Process -Name explorer -ErrorAction SilentlyContinue | Select-Object -First 1
                                 if ($explorer) {
-                                    $owner = (Get-CimInstance Win32_Process -Filter "ProcessId=$($explorer.Id)").GetOwner()
-                                    if ($owner -and $owner.Domain -and $owner.User) { $user = "$($owner.Domain)\$($owner.User)" }
+                                    try {
+                                        $owner = (Get-WmiObject Win32_Process -Filter "Handle=$($explorer.Id)" -ErrorAction Stop).GetOwner()
+                                        if ($owner -and $owner.Domain -and $owner.User) { $user = "$($owner.Domain)\$($owner.User)" }
+                                    } catch {
+                                        # Silently continue if GetOwner fails (may indicate OneDrive not installed or WMI issue)
+                                    }
                                 }
                             }
 
@@ -497,7 +501,7 @@ function Invoke-GetPCInfo {
                         }
                     }
                     catch {
-                        Write-Host "Unable to query OneDrive status: $_"
+                        Write-Host "Error querying OneDrive status: $($_.Exception.Message)" -ForegroundColor Yellow
                     }
                     Write-AfterTable
 
