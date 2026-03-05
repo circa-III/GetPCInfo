@@ -15,6 +15,9 @@ If the files are not in the C:\ folder the shortcuts won't work until you change
 If you have any questions, reach out to Brad Linder (blinder@ecommunity)
 
 ## CHANGELOG
+-===[ UPDATE 26.03.05]===-
+- Replace the previous Get-CimInstance owner lookup to avoid failures when GetOwner cannot be retrieved with OneDrive and silently continue on error.
+- update the OneDrive error message to surface the exception message and display it in yellow for clearer diagnostics
 -===[ UPDATE 26.03 ]===-
 - Cleaned up code, added sections with color
 - Added OneDrive sync status
